@@ -6,8 +6,8 @@ param([string]$sourcePath,[string] $destinationPath,[string] $customerName)
 
 $Logfile = "C:\Robocopy_Log\Robocopy.log"
 $Subject = "Robocopy Results: Copy Purpose: Location 2 Location"
-$SMTPServer = "smtp.office365.com"
-$Sender = "edson.teixeira@bhs.com.br"
+$SMTPServer = "smtp-relay.gmail.com"
+$Sender = "edsonmarquesteixeira@gmail.com"
 $Recipients = "Infra@bhs.com.br"
 $Admin = "edson.teixeira@bhs.com.br"
 $SendEmail = $True
