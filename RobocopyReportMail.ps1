@@ -1,15 +1,21 @@
-﻿#* Based on the script of http://stackoverflow.com/questions/15672388/robocopy-sending-email-attachment-appending-file-name
+﻿#* Robocopy Report Mail
 #*=============================================
 #* Base variables
 #*=============================================
 param([string]$sourcePath,[string] $destinationPath,[string] $customerName)
 
-$Logfile = "C:\Robocopy_Log\Robocopy.log"
-$Subject = "Robocopy Results: Copy Purpose: Location 2 Location"
-$SMTPServer = "smtp-relay.gmail.com"
-$Sender = "edsonmarquesteixeira@gmail.com"
-$Recipients = "Infra@bhs.com.br"
-$Admin = "edson.teixeira@bhs.com.br"
+$Credential = (Get-Credential)
+$sourcePath = Read-Host "Enter For Source"
+$destinationPath = Read-Host "Enter For Destination"
+$Logfile = Read-Host "Enter the Log Destination"
+$customerName = Read-Host "Enter the Customer Name"
+$Hostname = ($Env:Computername)
+$Subject = "Robocopy Results: Copy Purpose: $sourcePath to $destinationPath"
+$SMTPServer = "smtp.office365.com"
+$SMTPort = "587"
+$Sender = "youmail@yourdomain.com"
+$Recipients = "youmail@yourdomain.com","youmail@yourdomain.com","youmail@yourdomain.com","youmail@yourdomain.com"
+$Admin = "youmail@yourdomain.com"
 $SendEmail = $True
 $IncludeAdmin = $True
 $AsAttachment = $True
@@ -19,8 +25,8 @@ $backupState = "UNKNOWN"
 #* SCRIPT BODY
 #*=============================================
 
-# Change robocopy options as needed. ( http://ss64.com/nt/robocopy.html )
-robocopy $sourcePath $destinationPath /MIR /FFT /R:2 /LOG:$Logfile  /XA:S /XD *RECYCLE.BIN*
+# Change robocopy options as needed. 
+robocopy $sourcePath $destinationPath /E /COPYALL /SEC /ETA /R:2 /W:5 /LOG:$Logfile /NDL /tee
 
 # The following attempts to get the error code for Robocopy
 # and use this as extra infromation and email determination.
@@ -145,7 +151,8 @@ Switch ($LASTEXITCODE)
 	}
 }
 
-$Subject = "[" + $customerName + "] " + "[" + $backupState + "] " + $Subject + ";" + $exit_reason + ";EC: " + $exit_code
+$Subject = "[" + $customerName + "] " + "[" + $backupState + "] " + "[" + $Hostname + "] " + $Subject + ";" + $exit_reason + ";EC: " + $exit_code
+
 
 # If the logfile exceeds a limit of 25MB, the file won't be sent as attachment, instead as content of the mail
 if ((Get-ChildItem $Logfile).Length -lt 25mb)
@@ -154,27 +161,25 @@ if ((Get-ChildItem $Logfile).Length -lt 25mb)
 	{
 		if ($AsAttachment)
 		{
-			Send-MailMessage -From $Sender -To $Recipients -Cc $Admin -Subject $Subject -Body "Robocopy results are attached." -Attachment $Logfile -DeliveryNotificationOption onFailure -SmtpServer $SMTPServer
+			Send-MailMessage -From $Sender -To $Recipients -Cc $Admin -Subject $Subject -Body "Robocopy results are attached." -Attachment $Logfile -DeliveryNotificationOption onFailure -SmtpServer $SMTPServer -Port $SMTPort -UseSsl -Credential $Credential
 		} else {
-			Send-MailMessage -From $Sender -To $Recipients -Cc $Admin -Subject $Subject -Body (Get-Content $LogFile | Out-String) -DeliveryNotificationOption onFailure -SmtpServer $SMTPServer
+			Send-MailMessage -From $Sender -To $Recipients -Cc $Admin -Subject $Subject -Body (Get-Content $LogFile | Out-String) -DeliveryNotificationOption onFailure -SmtpServer $SMTPServer -Port $SMTPort -UseSsl -Credential $Credential
 		}
 	} else {
 		if ($AsAttachment)
 		{
-			Send-MailMessage -From $Sender -To $Recipients -Subject $Subject -Body "Robocopy results are attached." -Attachment $Logfile -DeliveryNotificationOption onFailure -SmtpServer $SMTPServer
+			Send-MailMessage -From $Sender -To $Recipients -Subject $Subject -Body "Robocopy results are attached." -Attachment $Logfile -DeliveryNotificationOption onFailure -SmtpServer $SMTPServer -Port $SMTPort -UseSsl -Credential $Credential
 		} else {
-			Send-MailMessage -From $Sender -To $Recipients -Subject $Subject -Body (Get-Content $LogFile | Out-String) -DeliveryNotificationOption onFailure -SmtpServer $SMTPServer
+			Send-MailMessage -From $Sender -To $Recipients -Subject $Subject -Body (Get-Content $LogFile | Out-String) -DeliveryNotificationOption onFailure -SmtpServer $SMTPServer -Port $SMTPort -UseSsl -Credential $Credential
 		}
 	}
 } else {
 	$Body = "Logfile was too large to send." + (Get-Content $LogFile -TotalCount 15 | Out-String) + (Get-Content $LogFile | Select-Object -Last 13 | Out-String)
 	
-	Send-MailMessage -From $Sender -To $Recipients -Cc $Admin -Subject $Subject -Body $Body -DeliveryNotificationOption onFailure -SmtpServer $SMTPServer
+	Send-MailMessage -From $Sender -To $Recipients -Cc $Admin -Subject $Subject -Body $Body -DeliveryNotificationOption onFailure -SmtpServer $SMTPServer -Port $SMTPort -UseSsl -Credential $Credential
 }
 
-# Removing the logfile after sending it per email
-Remove-Item $Logfile
 
 #*=============================================
-#* END OF SCRIPT: Copy-RobocopyAndEmail.ps1
+#* END OF SCRIPT: Robocopy Report Mail
 #*=============================================
