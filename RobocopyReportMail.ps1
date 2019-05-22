@@ -4,18 +4,25 @@
 #*=============================================
 param([string]$sourcePath,[string] $destinationPath,[string] $customerName)
 
-$Credential = (Get-Credential)
-$sourcePath = Read-Host "Enter For Source"
-$destinationPath = Read-Host "Enter For Destination"
-$Logfile = Read-Host "Enter the Log Destination"
-$customerName = Read-Host "Enter the Customer Name"
+Install-Module PSWriteColor -Force
+$line = '========================================================================'
+
+Write-Color $line -LinesBefore 1
+Write-Color 'ROBOCOPY SCRIPT FOR BACKUP AND SEND MAIL' -C Green -StartTab 1
+Write-Color $line
+
+$Credential = (Get-Credential -Message "Enter with the your email and password credentials")
+$sourcePath = Read-Host "Enter with the source directory"
+$destinationPath = Read-Host "Enter with the destination directory"
+$Logfile = Read-Host "Enter with the log file destination"
+$customerName = Read-Host "Enter with the customer name"
 $Hostname = ($Env:Computername)
 $Subject = "Robocopy Results: Copy Purpose: $sourcePath to $destinationPath"
-$SMTPServer = "smtp.office365.com"
-$SMTPort = "587"
-$Sender = "youmail@yourdomain.com"
-$Recipients = "youmail@yourdomain.com","youmail@yourdomain.com","youmail@yourdomain.com","youmail@yourdomain.com"
-$Admin = "youmail@yourdomain.com"
+$SMTPServer = Read-Host "Enter with the name of SMTP Server"
+$SMTPort = Read-Host "Enter with the number of SMTP Port"
+$Sender = Read-Host "Enter with the sender mail"
+$Recipients = Read-Host "Enter with the recipient mail"
+$Admin = Read-Host "Enter with the admin mail"
 $SendEmail = $True
 $IncludeAdmin = $True
 $AsAttachment = $True
@@ -179,6 +186,9 @@ if ((Get-ChildItem $Logfile).Length -lt 25mb)
 	Send-MailMessage -From $Sender -To $Recipients -Cc $Admin -Subject $Subject -Body $Body -DeliveryNotificationOption onFailure -SmtpServer $SMTPServer -Port $SMTPort -UseSsl -Credential $Credential
 }
 
+Write-Color $line -LinesBefore 1
+Write-Color 'END OF SCRIPT' -C Green -StartTab 1
+Write-Color $line
 
 #*=============================================
 #* END OF SCRIPT: Robocopy Report Mail
